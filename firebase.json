@@ -4,6 +4,13 @@
          "firebase.json",
          "**/.*"
       ],
-      "public": "public"
+      "public": "public",
+      "redirects": [
+         {
+            "destination": "https://raw.githubusercontent.com/foxygoat/jsonnext/:path",
+            "source": "jsonnext/:path*",
+            "type": 302
+         }
+      ]
    }
 }
