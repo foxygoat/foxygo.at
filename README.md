@@ -5,68 +5,50 @@ host those modules, but instead redirects to the code on github.com.
 Firebase is used to do this redirection as it does it easily, cheaply
 (free!) and with TLS.
 
-## DNS Setup
+## Requirements
 
-The GCP project hosting the firebase project is `foxygoat-ab0f2` which
-has a custom domain set up as per the [firebase custom domain
-docs](https://firebase.google.com/docs/hosting/custom-domain). To
-implement this, three DNS records were created in the [GoDaddy DNS
-Management for foxygo.at](https://dcc.godaddy.com/manage/foxygo.at/dns):
+* GNU make
+* jsonnet and jsonnetfmt
+* Firebase CLI
 
-  * a `TXT` record for google-site-verification
-  * 2 `A` records (151.101.1.195, 151.101.65.195)
+GNU make should be installed by default on most systems. If not, install
+it.
 
-In BIND zone format:
+Jsonnet and Firebase can be installed by running:
 
-    @       3600     IN     A       151.101.1.195
-    @       3600     IN     A       151.101.65.195
-    @       600      IN     TXT     "google-site-verification=<redacted>"
+    make get-tools
 
-The shorter timeout on the `TXT` record is so if we need to re-create
-it, it will not take too long to propagate. It will be queried
-infrequently (just on setup I assume) so the short expiry should not
-create excessive lookups.
+This will try to install `firebase` in `/usr/local/bin`. If you do not
+have permission to do that, instead run the following commands:
 
-## Firebase setup
+    sudo make get-firebase
+    make get-jsonnet
 
-The initial files in this repository have been created using the
-[`firebase` CLI tool](https://firebase.google.com/docs/cli) and running:
+The first command will prompt for your password for root access. Do not
+run the `get-jsonnet` target under sudo.
 
-    firebase init
+If you don't have sudo access, run:
 
-The only Firebase product selected was `Hosting`.
+    mkdir -p $HOME/bin
+    make fbinstall=$HOME/bin get-tools
 
-## Redirection
+and add `$HOME/bin` to your `PATH`.
 
-HTTP and HTML redirection are used to point the `foxygo.at` domain
-appropriately for two purposes: Go modules, and file serving from a git
-repository. Both redirections point to `github.com/foxygoat` but are
-done differently as Go modules require some HTML metadata to be served
-properly. That requires HTML redirection so we can attach that metadata
-before being redirected. The file serving is a more simple HTTP
-redirection to `raw.githubusercontent.com/foxygoat`.
+## Configuration
 
-The file [`config.jsonnet`](config.jsonnet) contains a list of both
-redirections and is used to generate the firebase config file
-(`firebase.json`) which contains the HTTP redirections and the
-`index.html` files which contain the HTML Go metadata and redirections.
+Configuration of the redirections (and the entire firebase project) is
+generated from the jsonnet. The main config file is `config.jsonnet`
+which contains the Firebase hosting config and the redirections to set
+up.
 
-Generating these files is done through a Makefile, by running:
+To generate the config and deployment files from the source config, run:
 
     make config
 
-`config.jsonnet` also contains the standard firebase config, into which
-the HTTP redirections are added.
+If you edit the jsonnet config files, make sure you format them (if your
+editor does not do it automatically) with:
 
-HTML redirection is used to redirect Go module references from
-`foxygo.at/<module>` to `github.com/foxygoat/<module>`. A module
-redirection should be set up for each module published under
-`foxygo.at`.
-
-Files redirection is used to redirect repository file access references
-to be able to serve files from a `github.com/foxygoat` repository.
-Currently this is intended to serve jsonnet files for use by
-`foxygo.at/jsonnext/importer`.
+    make fmt
 
 ## Deployment
 
