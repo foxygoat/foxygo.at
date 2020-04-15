@@ -1,6 +1,6 @@
 local firebase = import 'firebase.libsonnet';
 
-local go_modules = ['jsonnext', 's'];
+local go_modules = ['dynafake', 'jsonnext', 's'];
 local file_repos = ['jsonnext'];
 
 // See https://firebase.google.com/docs/hosting/full-config
