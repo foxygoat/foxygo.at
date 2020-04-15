@@ -14,7 +14,7 @@ get-tools: get-firebase get-jsonnet  ## Install/update tools needed by this Make
 
 fbos = $(fbos_$(shell uname))
 fbos_Linux = linux
-fbos_Dawrin = macos
+fbos_Darwin = macos
 fburl = https://github.com/firebase/firebase-tools/releases/latest/download/firebase-tools-$(fbos)
 fbinstall = /usr/local/bin/firebase
 fblatest = $(shell curl -s -o /dev/null -D - '$(fburl)' | awk -F/ '/^location:/ {print $$8}')
