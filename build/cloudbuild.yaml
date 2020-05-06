@@ -1,0 +1,11 @@
+steps:
+- id: 'check-diff'
+  name: foxygoat/firebase-tools
+  entrypoint: 'make'
+  args: ['check-diff']
+
+- id: 'deploy'
+  env: ['BRANCH_NAME=${BRANCH_NAME}']
+  name: foxygoat/firebase-tools
+  entrypoint: 'make'
+  args: ['deploy']

@@ -36,6 +36,17 @@ jsonnet = github.com/google/go-jsonnet
 get-jsonnet:  ## Install/update jsonnet CLI tools to $GOPATH/bin
 	go get $(jsonnet)/cmd/jsonnet $(jsonnet)/cmd/jsonnetfmt
 
+# --- CI ---
+
+DIFF_MSG = $(COLOUR_RED)"generated code is out of date, run 'make config' and commit changes"$(COLOUR_NORMAL)
+check-diff:
+	@BEFORE_HASH=$$(find public -type f -exec shasum {} \; | sort | shasum); \
+	$(MAKE) config; \
+	AFTER_HASH=$$(find public -type f -exec shasum {} \; | sort | shasum); \
+	[ "$${BEFORE_HASH}" = "$${AFTER_HASH}" ] || { printf "$(DIFF_MSG)\n"; exit 1; }
+
+deploy-on-master: $(if $(filter $(BRANCH_NAME),master),deploy)
+
 # --- Builder image for CI ---
 
 builder: ## Create builder image for Google Cloud Build
