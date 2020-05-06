@@ -8,4 +8,4 @@ steps:
   env: ['BRANCH_NAME=${BRANCH_NAME}']
   name: foxygoat/firebase-tools
   entrypoint: 'make'
-  args: ['deploy']
+  args: ['deploy-on-master']
