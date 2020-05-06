@@ -36,6 +36,25 @@ jsonnet = github.com/google/go-jsonnet
 get-jsonnet:  ## Install/update jsonnet CLI tools to $GOPATH/bin
 	go get $(jsonnet)/cmd/jsonnet $(jsonnet)/cmd/jsonnetfmt
 
+# --- Builder image for CI ---
+
+builder: ## Create builder image for Google Cloud Build
+	docker build -f build/builder.Dockerfile -t foxygoat/firebase-tools .
+
+push-builder: ## Push builder image to docker hub
+	docker push foxygoat/firebase-tools
+
+FIREBASE_TOKEN_HELP = $(COLOUR_RED)FIREBASE_TOKEN not set, run\n  firebase login:ci\n  export FIREBASE_TOKEN='<token>'\n$(COLOUR_NORMAL)
+
+run-builder: config ## Run builder image locally
+	@[ -n "$${FIREBASE_TOKEN}" ] || { printf "$(FIREBASE_TOKEN_HELP)"; exit 1; }
+	docker run --rm \
+		--volume $(PWD):/workspace \
+		--workdir /workspace \
+		--env FIREBASE_TOKEN \
+		foxygoat/firebase-tools deploy \
+		--only hosting --project foxygoat-ab0f2
+
 # --- Utilities ----
 
 COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
