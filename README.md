@@ -1,15 +1,17 @@
 # Firebase hosting of https://foxygo.at
 
-The `foxygo.at` domain is used to name Go modules. However it does not
-host those modules, but instead redirects to the code on github.com.
-Firebase is used to do this redirection as it does it easily, cheaply
-(free!) and with TLS.
+The `foxygo.at` domain is used to serve github.com/foxygoat repositories
+as Go modules and raw file content.
+
+It does not host those repositories, but instead redirects to the code
+on github.com. Firebase is used to do this redirection as it does it
+easily, cheaply (free!) and with TLS.
 
 ## Requirements
 
-* GNU make
-* jsonnet and jsonnetfmt
-* Firebase CLI
+- GNU make
+- jsonnet and jsonnetfmt
+- Firebase CLI
 
 GNU make should be installed by default on most systems. If not, install
 it.
@@ -18,42 +20,28 @@ Jsonnet and Firebase can be installed by running:
 
     make get-tools
 
-This will try to install `firebase` in `/usr/local/bin`. If you do not
-have permission to do that, instead run the following commands:
+Without appropriate permissions this might fail, see [docs/get-tools.md]
+for help.
 
-    sudo make get-firebase
-    make get-jsonnet
+## Publish a new repo
 
-The first command will prompt for your password for root access. Do not
-run the `get-jsonnet` target under sudo.
+Edit `config.jsonnet`. If you want to add a new go module add the
+repository name to `go_modules`. If you want to add a new raw GitHub
+file serving repository add the repository name to `go_modules`.
 
-If you don't have sudo access, run:
+Run `make config` and commit changes. The changes will be deployed when
+merged to `master` by our CI/CD system on [Google Cloud Builds](https://console.cloud.google.com/cloud-build/builds?project=foxygoat-ab0f2).
 
-    mkdir -p $HOME/bin
-    make fbinstall=$HOME/bin get-tools
+## Help
 
-and add `$HOME/bin` to your `PATH`.
+Most operations are driven by the `Makefile`, to see them run
 
-## Configuration
+    make help
 
-Configuration of the redirections (and the entire firebase project) is
-generated from the jsonnet. The main config file is `config.jsonnet`
-which contains the Firebase hosting config and the redirections to set
-up.
+## Manual deployment
 
-To generate the config and deployment files from the source config, run:
-
-    make config
-
-If you edit the jsonnet config files, make sure you format them (if your
-editor does not do it automatically) with:
-
-    make fmt
-
-## Deployment
-
-Any changes to the Firebase configuration needs to be deployed. This can
-be done by running:
+Changes are typically deployed by CI / CD pipeline but can be manually
+deployed with
 
     make deploy
 
