@@ -1,12 +1,13 @@
 # --- Configure and deploy ---
-config:
+
+config: fmt ## Generate firebase-hosted files in 'public' folder
 	jsonnet -S -c -m . config.jsonnet
 
-fmt:
+fmt: ## Format jsonnet files
 	jsonnetfmt -i config.jsonnet firebase.libsonnet
 
-deploy: config
-	firebase deploy
+deploy: config  ## Deploy 'public' folder to firebase
+	firebase deploy --only hosting --project foxygoat-ab0f2
 
 # --- Install software ----
 
@@ -22,7 +23,7 @@ fblatest = $(shell curl -s -o /dev/null -D - '$(fburl)' | awk -F/ '/^location:/ 
 # `firebase --version | hexdump -C` to demonstrate
 fbcurrent = v$(or $(shell firebase --version 2> /dev/null | cut -d '' -f 2),0.0.0)
 
-get-firebase:  ## Install/update firebase CLI to $(fbinstall)
+get-firebase:  ## Install/update firebase CLI to /usr/local/bin
 	@if [ "$(fbcurrent)" != "$(fblatest)" ]; then \
 		curl -L -o '$(fbinstall)' '$(fburl)'; \
 		chmod 755 '$(fbinstall)'; \
@@ -32,5 +33,47 @@ get-firebase:  ## Install/update firebase CLI to $(fbinstall)
 
 jsonnet = github.com/google/go-jsonnet
 # go get is safe because we are not in a go module.
-get-jsonnet:  ## Install/update jsonnet CLI tools
+get-jsonnet:  ## Install/update jsonnet CLI tools to $GOPATH/bin
 	go get $(jsonnet)/cmd/jsonnet $(jsonnet)/cmd/jsonnetfmt
+
+# --- CI ---
+
+DIFF_MSG = $(COLOUR_RED)"generated code is out of date, run 'make config' and commit changes"$(COLOUR_NORMAL)
+check-diff:
+	@BEFORE_HASH=$$(find public -type f -exec shasum {} \; | sort | shasum); \
+	$(MAKE) config; \
+	AFTER_HASH=$$(find public -type f -exec shasum {} \; | sort | shasum); \
+	[ "$${BEFORE_HASH}" = "$${AFTER_HASH}" ] || { printf "$(DIFF_MSG)\n"; exit 1; }
+
+deploy-on-master: $(if $(filter $(BRANCH_NAME),master),deploy)
+
+# --- Builder image for CI ---
+
+builder: ## Create builder image for Google Cloud Build
+	docker build -f build/builder.Dockerfile -t foxygoat/firebase-tools .
+
+push-builder: ## Push builder image to docker hub
+	docker push foxygoat/firebase-tools
+
+FIREBASE_TOKEN_HELP = $(COLOUR_RED)FIREBASE_TOKEN not set, run\n  firebase login:ci\n  export FIREBASE_TOKEN='<token>'\n$(COLOUR_NORMAL)
+
+run-builder: config ## Run builder image locally
+	@[ -n "$${FIREBASE_TOKEN}" ] || { printf "$(FIREBASE_TOKEN_HELP)"; exit 1; }
+	docker run --rm \
+		--volume $(PWD):/workspace \
+		--workdir /workspace \
+		--env FIREBASE_TOKEN \
+		foxygoat/firebase-tools deploy \
+		--only hosting --project foxygoat-ab0f2
+
+# --- Utilities ----
+
+COLOUR_NORMAL = $(shell tput sgr0 2>/dev/null)
+COLOUR_RED    = $(shell tput setaf 1 2>/dev/null)
+COLOUR_GREEN  = $(shell tput setaf 2 2>/dev/null)
+COLOUR_WHITE  = $(shell tput setaf 7 2>/dev/null)
+
+help:
+	@awk -F ':.*## ' 'NF == 2 && $$1 ~ /^[A-Za-z0-9_-]+$$/ { printf "$(COLOUR_WHITE)%-30s$(COLOUR_NORMAL)%s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
+
+.PHONY: help
