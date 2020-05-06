@@ -9,6 +9,8 @@ fmt: ## Format jsonnet files
 deploy: config  ## Deploy 'public' folder to firebase
 	firebase deploy --only hosting --project foxygoat-ab0f2
 
+.PHONY: config deploy fmt
+
 # --- Install software ----
 
 get-tools: get-firebase get-jsonnet  ## Install/update tools needed by this Makefile
@@ -36,6 +38,8 @@ jsonnet = github.com/google/go-jsonnet
 get-jsonnet:  ## Install/update jsonnet CLI tools to $GOPATH/bin
 	go get $(jsonnet)/cmd/jsonnet $(jsonnet)/cmd/jsonnetfmt
 
+.PHONY: get-firebase get-jsonnet get-tools
+
 # --- CI ---
 
 DIFF_MSG = $(COLOUR_RED)"generated code is out of date, run 'make config' and commit changes"$(COLOUR_NORMAL)
@@ -46,6 +50,8 @@ check-diff:
 	[ "$${BEFORE_HASH}" = "$${AFTER_HASH}" ] || { printf "$(DIFF_MSG)\n"; exit 1; }
 
 deploy-on-master: $(if $(filter $(BRANCH_NAME),master),deploy)
+
+.PHONY: check-diff deploy-on-master
 
 # --- Builder image for CI ---
 
@@ -65,6 +71,8 @@ run-builder: config ## Run builder image locally
 		--env FIREBASE_TOKEN \
 		foxygoat/firebase-tools deploy \
 		--only hosting --project foxygoat-ab0f2
+
+.PHONY: builder push-builder run-builder
 
 # --- Utilities ----
 
