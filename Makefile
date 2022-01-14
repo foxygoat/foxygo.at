@@ -36,7 +36,7 @@ get-firebase:  ## Install/update firebase CLI to /usr/local/bin
 jsonnet = github.com/google/go-jsonnet
 # go get is safe because we are not in a go module.
 get-jsonnet:  ## Install/update jsonnet CLI tools to $GOPATH/bin
-	go get $(jsonnet)/cmd/jsonnet $(jsonnet)/cmd/jsonnetfmt
+	go install $(jsonnet)/cmd/jsonnet@latest $(jsonnet)/cmd/jsonnetfmt@latest
 
 .PHONY: get-firebase get-jsonnet get-tools
 
