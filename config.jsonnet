@@ -1,6 +1,6 @@
 local firebase = import 'firebase.libsonnet';
 
-local go_modules = ['evy', 'foxtrot', 'jcdc', 'jig', 'jsonnext', 'offscreen', 'protog', 's', 'servedir'];
+local go_modules = ['evy', 'foxtrot', 'git-credential-fdoss', 'jcdc', 'jig', 'jsonnext', 'offscreen', 'protog', 's', 'servedir'];
 local file_repos = ['jsonnext'];
 
 // See https://firebase.google.com/docs/hosting/full-config
